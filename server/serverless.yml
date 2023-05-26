@@ -1,0 +1,23 @@
+service: car-rental-app
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  httpApi:
+    cors: true
+functions:
+  graphql:
+    handler: dist/index.graphqlHandler # highlight-line
+    events:
+      - httpApi:
+          path: /
+          method: POST
+      - httpApi:
+          path: /
+          method: GET
+# Omit the following lines if you aren't using TS!
+plugins:
+  - serverless-plugin-typescript
+  # needed for schema.prisma DATABASE_URL!!!
+  - serverless-dotenv-plugin

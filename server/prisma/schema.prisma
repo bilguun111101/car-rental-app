@@ -1,0 +1,92 @@
+generator client {
+  provider      = "prisma-client-js"
+  //https://www.prisma.io/docs/guides/deployment/deployment-guides/caveats-when-deploying-to-aws-platforms
+  binaryTargets = ["native", "rhel-openssl-1.0.x"] // needed for AWS deployment
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL") // need to install "serverless-dotenv-plugin" package, include it into serverless.yml for AWS deployment
+}
+
+model User {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  email        String        @unique
+  password     String
+  name         String?
+  phone        String?
+  age          String?
+  role         String
+  rentals      Rental[]
+  cars         Car[]
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+}
+
+model Rental {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  dateRent   String
+  dateReturn String
+  totalDays  Int
+  location   String
+  verified   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  extras     Extras
+  car        CarType
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @db.ObjectId
+}
+
+model Car {
+  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  image          String
+  type           String
+  typeDefinition String
+  model          String
+  transmission   String
+  kml            Int
+  passengers     Int
+  price          Int
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String @db.ObjectId
+}
+
+model Transaction {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique @db.ObjectId
+}
+
+model Token {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  token  String
+  userId String @unique
+}
+
+model Language {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  textId String
+  lang   String
+  value  String
+}
+
+type Extras {
+  coverage     Boolean @default(false)
+  child_safety Boolean @default(false)
+  GPS          Boolean @default(false)
+}
+
+type CarType {
+  image          String
+  type           String
+  typeDefinition String
+  model          String
+  transmission   String
+  kml            Int
+  passengers     Int
+  price          Int
+}
+
+// Notes: onDelete:Cascade does not work on MongoDb!!!!!!!!!!!!!!!!
